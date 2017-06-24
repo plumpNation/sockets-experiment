@@ -1,27 +1,43 @@
 'use strict';
 
 const clientIO = require('socket.io-client');
+const Server = require('../src/server');
 
 require('./test-helper');
 
 describe('echo', function () {
     let client;
-    let serverIO;
+
+    let server1;
+    let server2;
+    let server3;
 
     beforeEach(function (done) {
         // start the server
-        ({serverIO} = require('../src'));
+        server1 = new Server(3000);
+        server2 = new Server(3001);
+        server3 = new Server(3002);
 
-        client = clientIO.connect('http://localhost:3000', clientOptions);
+        expect(server1.io).to.not.equal(server2.io);
+
+        // we'll emit to server3
+        client = clientIO.connect('http://localhost:3002', clientOptions);
 
         client.once('connect', () => {
             console.log('client: connection');
 
-            serverIO.of('/').adapter.clients((err, clients) => {
+            // note we're testing server1
+            server1.io.of('/').adapter.clients((err, clients) => {
                 if (err) done(err);
 
                 expect(clients).to.have.length(1);
-                done();
+
+                server2.io.of('/').adapter.clients((err, clients) => {
+                    if (err) done(err);
+
+                    expect(clients).to.have.length(1);
+                    done();
+                });
             });
         });
     });
@@ -30,11 +46,17 @@ describe('echo', function () {
         client.once('disconnect', function () {
             console.log('client: disconnection');
 
-            serverIO.of('/').adapter.clients((err, clients) => {
+            server1.io.of('/').adapter.clients((err, clients) => {
                 if (err) done(err);
 
                 expect(clients).to.have.length(0);
-                done();
+
+                server2.io.of('/').adapter.clients((err, clients) => {
+                    if (err) done(err);
+
+                    expect(clients).to.have.length(0);
+                    done();
+                });
             });
         });
 
