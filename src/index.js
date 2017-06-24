@@ -5,16 +5,25 @@ const app     = express();
 const server  = require('http').createServer(app);
 const io      = require('socket.io')(server);
 
-io.on('connection', function (socket) {
-    console.log('a user connected');
+const redis   = require('socket.io-redis');
 
-    socket.on('disconnect', () => {
-        console.log('a user disconnected');
+io.adapter(redis({
+    'key': 'foobar',
+    'host': 'localhost',
+    'port': 6379,
+    'requestsTimeout': 2000
+}));
+
+io.on('connection', function (connection) {
+    console.log(`server: connection ${connection.id}`);
+
+    connection.on('disconnect', (data) => {
+        console.log('server: disconnection');
     });
 
     // We simply pass the data back
-    socket.on('echo', (data) => {
-        socket.emit('echo', data);
+    connection.on('echo', (data) => {
+        connection.emit('echo', data);
     });
 });
 
@@ -22,4 +31,4 @@ server.listen(3000, function () {
     console.log('listening on *:3000');
 });
 
-exports.server = server;
+exports.serverIO = io;

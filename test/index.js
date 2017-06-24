@@ -3,21 +3,35 @@
 require('./test-helper');
 
 describe('echo', function () {
-    let server;
     let client;
+    let serverIO;
 
     beforeEach(function (done) {
         // start the server
-        server = require('../src').server;
-        client = io.connect('http://localhost:3000', clientOptions);
+        ({serverIO} = require('../src'));
+
+        client = clientIO.connect('http://localhost:3000', clientOptions);
 
         client.once('connect', () => {
-            console.log('client connected');
-            done();
+            console.log('client: connection');
+
+            serverIO.of('/').adapter.clients((err, clients) => {
+                expect(clients).to.have.length(1);
+                done();
+            });
         });
     });
 
-    afterEach(function () {
+    afterEach(function (done) {
+        client.once('disconnect', function () {
+            console.log('client: disconnection');
+
+            serverIO.of('/').adapter.clients((err, clients) => {
+                expect(clients).to.have.length(0);
+                done();
+            });
+        });
+
         client.disconnect();
     });
 
