@@ -16,6 +16,8 @@ describe('echo', function () {
             console.log('client: connection');
 
             serverIO.of('/').adapter.clients((err, clients) => {
+                if (err) done(err);
+
                 expect(clients).to.have.length(1);
                 done();
             });
@@ -27,6 +29,8 @@ describe('echo', function () {
             console.log('client: disconnection');
 
             serverIO.of('/').adapter.clients((err, clients) => {
+                if (err) done(err);
+
                 expect(clients).to.have.length(0);
                 done();
             });
