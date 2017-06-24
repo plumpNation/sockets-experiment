@@ -18,24 +18,23 @@ describe('echo', function () {
         server = require('../src').server;
         client = io.connect('http://localhost:3000', options);
 
-        done();
+        client.once('connect', () => {
+            console.log('client connected');
+            done();
+        });
+    });
+
+    afterEach(function () {
+        client.disconnect();
     });
 
     it('echos message back to us', function (done) {
-        client.once('connect', function () {
-            console.log('client connected');
+        client.once('echo', (message) => {
+            expect(message).to.equal('Hello World');
 
-            client.once('echo', function (message) {
-                expect(message).to.equal('Hello World');
-
-                console.log('disconnecting');
-                client.disconnect();
-
-                done();
-            });
-
-            console.log('Sending test message', '"Hello World"');
-            client.emit('echo', 'Hello World');
+            done();
         });
+
+        client.emit('echo', 'Hello World');
     });
 });
