@@ -12,11 +12,14 @@ io.on('connection', function (socket) {
         console.log('a user disconnected');
     });
 
+    // We simply pass the data back
     socket.on('echo', (data) => {
         socket.emit('echo', data);
     });
 });
 
-server.listen(3000, function(){
+server.listen(3000, function () {
     console.log('listening on *:3000');
 });
+
+exports.server = server;
