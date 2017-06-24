@@ -1,5 +1,7 @@
 'use strict';
 
+const clientIO = require('socket.io-client');
+
 require('./test-helper');
 
 describe('echo', function () {
