@@ -1,13 +1,6 @@
 'use strict';
 
-const mocha = require('mocha');
-const expect = require('chai').expect;
-const io = require('socket.io-client');
-
-const options = {
-    'transports': ['websocket'],
-    'force new connection': true
-};
+require('./test-helper');
 
 describe('echo', function () {
     let server;
@@ -16,7 +9,7 @@ describe('echo', function () {
     beforeEach(function (done) {
         // start the server
         server = require('../src').server;
-        client = io.connect('http://localhost:3000', options);
+        client = io.connect('http://localhost:3000', clientOptions);
 
         client.once('connect', () => {
             console.log('client connected');
