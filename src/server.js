@@ -7,10 +7,10 @@ class Server {
         const server  = require('http').createServer(app);
         const redis   = require('socket.io-redis');
         const io      = require('socket.io')(server);
-
-        this.port = port;
         this.io = io;
 
+        // You must have a redis server up and running.
+        // `6379` is the default port that redis runs on
         io.adapter(redis({
             'key': 'foobar',
             'host': 'localhost',
@@ -31,10 +31,27 @@ class Server {
             });
         });
 
-        server.listen(this.port || 3000, function () {
+        console.log(`trying to bind server to *:${port}`);
+
+        server.listen(port, function () {
             console.log(`listening on *:${port}`);
         });
     }
 }
+
+// Can also run from the command line with the `serve [port]` command
+require('yargs')
+    .usage('$0 <cmd> [args]')
+    .command('serve [port]', 'start the server', (yargs) => {
+        return yargs.option('port', {
+            describe: 'Port server should bind on',
+            default: 3000
+        })
+    }, (argv) => {
+        console.log(argv);
+        new Server(argv.port);
+    })
+    .help()
+    .argv
 
 module.exports = Server;

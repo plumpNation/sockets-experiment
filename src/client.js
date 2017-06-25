@@ -1,3 +1,4 @@
+
 const io = require('socket.io-client');
 
 const clientOptions = {
@@ -5,8 +6,25 @@ const clientOptions = {
     'force new connection': true
 };
 
-const client = io.connect('http://localhost:3000', clientOptions);
+const argv = require('yargs')
+    .usage('Usage: $0 [args]')
+    .option('sp', {
+        'alias': 'server-port',
+        'default': 3000,
+        'describe': 'The socket server port to connect to'
+    })
+    .help()
+    .argv;
 
-client.once('connect', (response) => {
+console.log(argv);
+console.log(`client: connecting to ${argv.serverPort}`);
+
+const client = io.connect(`http://localhost:${argv.serverPort}`, clientOptions);
+
+client.on('connect', (response) => {
     console.log('client: connection');
+});
+
+client.on('disconnect', (response) => {
+    console.log('client: disconnecting');
 });

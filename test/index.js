@@ -1,7 +1,8 @@
 'use strict';
 
-const clientIO = require('socket.io-client');
 const Server = require('../src/server');
+const bluebird = require('bluebird');
+const clientIO = require('socket.io-client');
 
 require('./test-helper');
 
@@ -13,7 +14,7 @@ describe('echo', function () {
     let server3;
 
     beforeEach(function (done) {
-        // start the server
+        // start 3 servers
         server1 = new Server(3000);
         server2 = new Server(3001);
         server3 = new Server(3002);
