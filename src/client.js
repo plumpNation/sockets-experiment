@@ -1,5 +1,4 @@
-
-const io = require('socket.io-client');
+'use strict';
 
 const clientOptions = {
     'transports': ['websocket'],
@@ -16,15 +15,34 @@ const argv = require('yargs')
     .help()
     .argv;
 
-console.log(argv);
-console.log(`client: connecting to ${argv.serverPort}`);
+const serverPath = `http://localhost:${argv.serverPort}`;
 
-const client = io.connect(`http://localhost:${argv.serverPort}`, clientOptions);
+console.log(`client: Trying to connect to ${serverPath}`);
 
-client.on('connect', (response) => {
-    console.log('client: connection');
+const io = require('socket.io-client');
+const socket = io(`${serverPath}`, clientOptions);
+
+socket.on('connect', () => {
+    console.log('client: connected to server');
+    console.log('client: socket id %s', socket.id);
+
+    socket.emit('join', {'roomId': 1});
 });
 
-client.on('disconnect', (response) => {
-    console.log('client: disconnecting');
+socket.on('joined room', () => {
+    console.log('I joined a room!');
+});
+
+socket.on('user joined', (data) => {
+    console.log('Another user joined');
+    console.log('Number of users in room is now %s', data.count);
+});
+
+socket.on('user left', (data) => {
+    console.log('Another user left');
+    console.log('Number of users in room is now %s', data.count);
+});
+
+socket.on('disconnect', () => {
+    console.log('client: disconnected from server');
 });
