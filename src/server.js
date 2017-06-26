@@ -62,7 +62,9 @@ function setupEvents(io) {
         socket.on('disconnect', (data) => {
             console.log('server: client disconnected');
 
-            socket.broadcast.to(data.roomId).emit('user left', {'count': numberUsersInRoom});
+            socket.broadcast.to(data.roomId).emit('user left', {
+                'count': getSocketIdsInRoom(io, namespace, data.roomId)
+            });
         });
 
         // We simply pass the data back
@@ -71,16 +73,22 @@ function setupEvents(io) {
         });
 
         socket.on('join', (data) => {
-            const room = io.nsps[namespace].adapter.rooms[data.roomId];
-            const numberUsersInRoom = room && room.sockets ? Object.keys(room.sockets).length : 0;
-
             console.log(`Joining room ${data.roomId}`);
 
             socket.join(data.roomId);
 
-            socket.broadcast.to(data.roomId).emit('user joined', {'count': numberUsersInRoom});
+            socket.broadcast.to(data.roomId).emit('user joined', {
+                'count': getSocketIdsInRoom(io, namespace, data.roomId)
+            });
 
             socket.emit('joined room');
         });
     });
+}
+
+function getSocketIdsInRoom(io, namespace, roomId) {
+    const room = io.nsps[namespace].adapter.rooms[roomId];
+    const numberUsersInRoom = room && room.sockets ? Object.keys(room.sockets).length : 0;
+
+    return numberUsersInRoom;
 }
