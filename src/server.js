@@ -69,9 +69,12 @@ function setupEvents(io) {
         socket.on('disconnect', (data) => {
             console.log('server: client disconnected');
 
-            socket.broadcast.to(data.roomId).emit('user left', {
-                'count': getSocketIdsInRoom(io, namespace, data.roomId)
-            });
+            getRoomClients(io, data.roomId)
+                .then((clients) => {
+                    socket.broadcast.to(data.roomId).emit('user left', {
+                        'count': clients.length
+                    });
+                });
         });
 
         // We simply pass the data back
@@ -84,18 +87,24 @@ function setupEvents(io) {
 
             socket.join(data.roomId);
 
-            socket.broadcast.to(data.roomId).emit('user joined', {
-                'count': getSocketIdsInRoom(io, namespace, data.roomId)
-            });
+            getRoomClients(io, data.roomId)
+                .then((clients) => {
+                    socket.broadcast.to(data.roomId).emit('user joined', {
+                        'count': clients.length
+                    });
+                });
 
             socket.emit('joined room');
         });
     });
 }
 
-function getSocketIdsInRoom(io, namespace, roomId) {
-    const room = io.nsps[namespace].adapter.rooms[roomId];
-    const numberUsersInRoom = room && room.sockets ? Object.keys(room.sockets).length : 0;
+function getRoomClients(io, roomId) {
+    return new Promise((resolve, reject) => {
+        io.in(roomId).clients((err, clients) => {
+            if (err) return reject(err);
 
-    return numberUsersInRoom;
+            resolve(clients);
+        });
+    });
 }
