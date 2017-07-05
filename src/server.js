@@ -33,9 +33,7 @@ class Server {
 
         console.log(`server: trying to bind server to *:${port}`);
 
-        server.listen(port, function () {
-            console.log(`server: listening on localhost:${port}`);
-
+        server.listen(port, () => {
             if (typeof PhusionPassenger !== 'undefined') {
                 console.log(`server: running in passenger on localhost:${port}`);
 
@@ -63,27 +61,45 @@ require('yargs')
 module.exports = Server;
 
 function setupEvents(io) {
-    io.on('connection', function (socket) {
+    io.on('connection', socket => {
         console.log(`server: client connected ${socket.id}`);
 
-        socket.on('disconnect', (data) => {
-            console.log('server: client disconnected');
+        socket.on('disconnect', reason => {
+            console.log('server: a client disconnected');
 
-            getRoomClients(io, data.roomId)
-                .then(clients => {
-                    socket.broadcast
-                        .to(data.roomId)
-                        .emit('user left', {'count': clients.length});
+            if (reason) return console.info('server: disconnecting reason:', reason);
+
+            console.warn('server: no reason given');
+        });
+
+        socket.on('disconnecting', reason => {
+            console.log('server: a client is disconnecting');
+
+            // We want to tell all rooms the socket had joined that the user is leaving.
+            getClientRooms(io, socket.id)
+                .then(rooms => {
+                    rooms.forEach(room => {
+                        getRoomClients(io, room)
+                            .then(clients => {
+                                socket.broadcast
+                                    .to(room)
+                                    .emit('user left', {'count': clients.length});
+                            });
+                    });
                 })
                 .catch(err => console.error(err));
+
+            if (reason) return console.info('server: disconnecting reason:', reason);
+
+            console.warn('server: no reason given');
         });
 
         // We simply pass the data back
-        socket.on('echo', (data) => {
+        socket.on('echo', data => {
             socket.emit('echo', data);
         });
 
-        socket.on('join', (data) => {
+        socket.on('join', data => {
             console.log(`Joining room ${data.roomId}`);
 
             socket.join(data.roomId);
@@ -97,6 +113,17 @@ function setupEvents(io) {
                 .catch(err => console.error(err));
 
             socket.emit('joined room');
+        });
+    });
+}
+
+function getClientRooms(io, socketId) {
+    console.log('server: getting rooms for socketId %s', socketId);
+    return new Promise((resolve, reject) => {
+        io.of('/').adapter.clientRooms(socketId, (err, rooms) => {
+            if (err) return reject(err);
+
+            resolve(rooms);
         });
     });
 }

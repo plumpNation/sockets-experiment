@@ -3,36 +3,41 @@
 const Server = require('../src/server');
 const clientIO = require('socket.io-client');
 
+const server0Path = 'http://localhost:3000';
+const server1Path = 'http://localhost:3001';
+const server2Path = 'http://localhost:3002';
+
 require('./test-helper');
 
-describe('echo', function () {
-    let client;
+let server0;
+let server1;
+let server2;
 
-    let server1;
-    let server2;
-    let server3;
+let client0;
+let client1;
 
+describe('server', function () {
     beforeEach(function (done) {
         // start 3 servers
-        server1 = new Server(3000);
-        server2 = new Server(3001);
-        server3 = new Server(3002);
+        server0 = new Server(3000);
+        server1 = new Server(3001);
+        server2 = new Server(3002);
 
-        expect(server1.io).to.not.equal(server2.io);
+        expect(server0.io).to.not.equal(server1.io);
 
-        // we'll emit to server3
-        client = clientIO.connect('http://localhost:3002', clientOptions);
+        // we'll emit to server2
+        client0 = clientIO.connect(server2Path, clientOptions);
 
-        client.once('connect', () => {
+        client0.once('connect', () => {
             console.log('client: connection');
 
-            // note we're testing server1
-            server1.io.of('/').adapter.clients((err, clients) => {
+            // note we're testing server0
+            server0.io.of('/').adapter.clients((err, clients) => {
                 if (err) done(err);
 
                 expect(clients).to.have.length(1);
 
-                server2.io.of('/').adapter.clients((err, clients) => {
+                server1.io.of('/').adapter.clients((err, clients) => {
                     if (err) done(err);
 
                     expect(clients).to.have.length(1);
@@ -43,33 +48,58 @@ describe('echo', function () {
     });
 
     afterEach(function (done) {
-        client.once('disconnect', function () {
-            console.log('client: disconnection');
+        client0.once('disconnect', () => onClientDisconnect(done));
 
-            server1.io.of('/').adapter.clients((err, clients) => {
-                if (err) done(err);
+        client0.disconnect();
 
-                expect(clients).to.have.length(0);
-
-                server2.io.of('/').adapter.clients((err, clients) => {
-                    if (err) done(err);
-
-                    expect(clients).to.have.length(0);
-                    done();
-                });
-            });
-        });
-
-        client.disconnect();
+        server0.io.close();
+        server1.io.close();
+        server2.io.close();
     });
 
-    it('echos message back to us', function (done) {
-        client.once('echo', (message) => {
-            expect(message).to.equal('Hello World');
+    describe('echo()', () => {
+        it('echos message back to us', done => {
+            client0.once('echo', assertReponse);
+            client0.emit('echo', 'Hello World');
+
+            function assertReponse(message) {
+                expect(message).to.equal('Hello World');
+
+                done();
+            }
+        });
+    });
+
+    // describe('socketMessage: user joined', () => {
+    //     it('should tell client0 how many users are in the room', done => {
+    //         client0.once('user joined', assertReponse);
+    //         clientIO.connect(server0Path, clientOptions);
+    //
+    //         function assertReponse(data) {
+    //             expect(data.count).to.equal(2);
+    //
+    //             done();
+    //         }
+    //     });
+    // });
+});
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function onClientDisconnect(done) {
+    console.log('client: disconnection');
+
+    server0.io.of('/').adapter.clients((err, clients) => {
+        if (err) done(err);
+
+        expect(clients).to.have.length(0);
+
+        server1.io.of('/').adapter.clients((err, clients) => {
+            if (err) done(err);
+
+            expect(clients).to.have.length(0);
 
             done();
         });
-
-        client.emit('echo', 'Hello World');
     });
-});
+}

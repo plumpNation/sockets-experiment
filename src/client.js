@@ -30,18 +30,23 @@ socket.on('connect', () => {
     console.log('client: connected to server');
     console.log('client: socket id %s', socket.id);
 
+    console.log('client: joining room 1');
     socket.emit('join', {'roomId': 1});
+});
+
+socket.on('disconnect', () => {
+    console.log('client: server went down');
 });
 
 socket.on('reconnect_attempt', () => {
     console.log('client: trying to reconnect');
 });
 
-socket.on('reconnect', (attemptNumber) => {
+socket.on('reconnect', attemptNumber => {
     console.log(`client: reconnected after ${attemptNumber} attempts`);
 });
 
-socket.on('reconnecting', (attemptNumber) => {
+socket.on('reconnecting', attemptNumber => {
     console.log(`client: trying to reconnect, attempt ${attemptNumber}`);
 });
 
@@ -49,16 +54,12 @@ socket.on('joined room', () => {
     console.log('I joined a room!');
 });
 
-socket.on('user joined', (data) => {
+socket.on('user joined', data => {
     console.log('Another user joined');
     console.log('Number of users in room is now %s', data.count);
 });
 
-socket.on('user left', (data) => {
+socket.on('user left', data => {
     console.log('Another user left');
     console.log('Number of users in room is now %s', data.count);
-});
-
-socket.on('disconnect', () => {
-    console.log('client: disconnected from server');
 });
