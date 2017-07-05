@@ -1,7 +1,6 @@
 'use strict';
 
 const Server = require('../src/server');
-const bluebird = require('bluebird');
 const clientIO = require('socket.io-client');
 
 require('./test-helper');
