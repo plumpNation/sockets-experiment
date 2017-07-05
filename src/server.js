@@ -70,11 +70,12 @@ function setupEvents(io) {
             console.log('server: client disconnected');
 
             getRoomClients(io, data.roomId)
-                .then((clients) => {
-                    socket.broadcast.to(data.roomId).emit('user left', {
-                        'count': clients.length
-                    });
-                });
+                .then(clients => {
+                    socket.broadcast
+                        .to(data.roomId)
+                        .emit('user left', {'count': clients.length});
+                })
+                .catch(err => console.error(err));
         });
 
         // We simply pass the data back
@@ -88,11 +89,12 @@ function setupEvents(io) {
             socket.join(data.roomId);
 
             getRoomClients(io, data.roomId)
-                .then((clients) => {
-                    socket.broadcast.to(data.roomId).emit('user joined', {
-                        'count': clients.length
-                    });
-                });
+                .then(clients => {
+                    socket.broadcast
+                        .to(data.roomId)
+                        .emit('user joined', {'count': clients.length});
+                })
+                .catch(err => console.error(err));
 
             socket.emit('joined room');
         });
