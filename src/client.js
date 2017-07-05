@@ -2,7 +2,11 @@
 
 const clientOptions = {
     'transports': ['websocket'],
-    'force new connection': true
+
+    'reconnection'         : true,
+    'reconnectionDelay'    : 1000,
+    'reconnectionDelayMax' : 5000,
+    'reconnectionAttempts' : 5
 };
 
 const argv = require('yargs')
@@ -27,6 +31,18 @@ socket.on('connect', () => {
     console.log('client: socket id %s', socket.id);
 
     socket.emit('join', {'roomId': 1});
+});
+
+socket.on('reconnect_attempt', () => {
+    console.log('client: trying to reconnect');
+});
+
+socket.on('reconnect', (attemptNumber) => {
+    console.log(`client: reconnected after ${attemptNumber} attempts`);
+});
+
+socket.on('reconnecting', (attemptNumber) => {
+    console.log(`client: trying to reconnect, attempt ${attemptNumber}`);
 });
 
 socket.on('joined room', () => {
