@@ -34,7 +34,14 @@ class Server {
         console.log(`server: trying to bind server to *:${port}`);
 
         server.listen(port, function () {
-            console.log(`server: listening on *:${port}`);
+            console.log(`server: listening on localhost:${port}`);
+
+            if (typeof PhusionPassenger !== 'undefined') {
+                console.log(`server: running in passenger on localhost:${port}`);
+
+            } else {
+                console.log(`server: listening on localhost:${port}`);
+            }
         });
     }
 }
