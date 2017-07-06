@@ -13,8 +13,8 @@
     "scripts": {
         "list": "pm2 list",
         "server-pm": "pm2 start src/server.js --",
-        "server": "nodemon src/server",
-        "client": "nodemon src/client",
+        "server": "nodemon src/server.js",
+        "client": "nodemon src/client.js",
         "test": "mocha test",
         "socket.io-client": "^2.0.3"
     },
