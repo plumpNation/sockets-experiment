@@ -1,5 +1,11 @@
 'use strict';
 
+/**
+ * Module based on the console-warn, console-log, console-error modules.
+ * https://github.com/abdennour/node-console-error
+ * https://github.com/abdennour/node-console-warn
+ * https://github.com/abdennour/node-console-info
+ */
 module.exports = class Log {
     constructor(options) {
         const levels = {
@@ -48,8 +54,7 @@ module.exports = class Log {
             foreground: "\x1b[36m", // blue
             text      : "\x1b[37m", // white
 
-            reset     : "\x1b[0m",
-            reverse   : "\x1b[7m"
+            reset     : "\x1b[0m"
         };
 
         this.out('info', data, arguments);
@@ -63,8 +68,7 @@ module.exports = class Log {
             foreground: "\x1b[33m", // yellow
             text      : "\x1b[37m", // white
 
-            reset     : "\x1b[0m",
-            reverse   : "\x1b[7m"
+            reset     : "\x1b[0m"
         };
 
         this.out('warn', data, arguments);
@@ -78,8 +82,7 @@ module.exports = class Log {
             foreground: "\x1b[31m", // red
             text      : "\x1b[37m", // white
 
-            reset     : "\x1b[0m",
-            reverse   : "\x1b[7m"
+            reset     : "\x1b[0m"
         };
 
         this.out('error', data, arguments);
