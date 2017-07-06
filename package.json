@@ -2,6 +2,7 @@
     "name": "sockets",
     "version": "1.0.0",
     "license": "MIT",
+    "main": "src/index.js",
     "dependencies": {
         "config": "^1.26.1",
         "express": "^4.15.3",
@@ -12,8 +13,8 @@
     },
     "scripts": {
         "list": "pm2 list",
-        "server-pm": "pm2 start src/server.js --",
-        "server": "nodemon src/server.js",
+        "server-pm": "pm2 start src/index.js --",
+        "server": "nodemon src/index.js",
         "client": "nodemon src/client.js",
         "test": "mocha test",
         "socket.io-client": "^2.0.3"
