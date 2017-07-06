@@ -1,22 +1,23 @@
 'use strict';
-
 const config  = require('config');
-const redis   = require('socket.io-redis');
+const Redis   = require('ioredis');
+const adapter = require('socket.io-redis');
 const http    = require('http');
 const express = require('express');
 
-const Log     = require('./log');
+const pubClient = new Redis(config.get('redis'));
+const subClient = new Redis(config.get('redis'));
 
+// socket.io namespace
+const namespace = '/';
+
+// use log.log, log.info, log.warn and log.error in order to be able
+// to adjust logging level for debugging.
+const Log = require('./log');
 const log = new Log(({
     'level': config.get('log.level'),
     'prefix': 'server'
 }));
-
-const redisPort = config.get('redis.port');
-const redisHost = config.get('redis.host');
-
-// socket.io namespace
-const namespace = '/';
 
 class Server {
     constructor(port) {
@@ -26,15 +27,12 @@ class Server {
 
         this.io = io;
 
-        log.log(`connecting to redis server at ${redisHost}:${redisPort}`);
-
         // You must have a redis server up and running.
         // `6379` is the default port that redis runs on
-        io.adapter(redis({
-            'key': 'foobar',
-            'host': redisHost || 'localhost',
-            'port': redisPort || 6379,
-            'requestsTimeout': 2000
+        io.adapter(adapter({
+            'pubClient': pubClient,
+            'subClient': subClient,
+            'requestsTimeout': 20000
         }));
 
         setupEvents(io, port);
