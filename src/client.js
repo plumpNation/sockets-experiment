@@ -1,5 +1,13 @@
 'use strict';
 
+const config = require('config');
+
+const Log = require('./log');
+const log = new Log({
+    'level': config.get('log.level'),
+    'prefix': 'client'
+});
+
 const clientOptions = {
     'transports': ['websocket'],
 
@@ -21,45 +29,40 @@ const argv = require('yargs')
 
 const serverPath = `http://localhost:${argv.serverPort}`;
 
-console.log(`client: Trying to connect to ${serverPath}`);
+log.info(`trying to connect to ${serverPath}`);
 
 const io = require('socket.io-client');
 const socket = io(`${serverPath}`, clientOptions);
 
 socket.on('connect', () => {
-    console.log('client: connected to server');
-    console.log('client: socket id %s', socket.id);
+    log.info('connected to server');
+    log.info('socket id', socket.id);
+    log.info('attempting to join room <room name here>');
 
-    console.log('client: joining room 1');
-    socket.emit('join', {'roomId': 1});
+    socket.emit('join room', {'roomId': '<room name here>'});
 });
 
 socket.on('disconnect', () => {
-    console.log('client: server went down');
+    log.info('server not available');
 });
 
 socket.on('reconnect_attempt', () => {
-    console.log('client: trying to reconnect');
+    log.info('trying to reconnect');
 });
 
 socket.on('reconnect', attemptNumber => {
-    console.log(`client: reconnected after ${attemptNumber} attempts`);
+    log.info(`reconnected after ${attemptNumber} attempts`);
 });
 
 socket.on('reconnecting', attemptNumber => {
-    console.log(`client: trying to reconnect, attempt ${attemptNumber}`);
+    log.info(`trying to reconnect, attempt ${attemptNumber}`);
 });
 
-socket.on('joined room', () => {
-    console.log('I joined a room!');
+socket.on('joined room', data => {
+    log.log('i joined room', data.roomId);
 });
 
-socket.on('user joined', data => {
-    console.log('Another user joined');
-    console.log('Number of users in room is now %s', data.count);
-});
-
-socket.on('user left', data => {
-    console.log('Another user left');
-    console.log('Number of users in room is now %s', data.count);
+socket.on('room population changed', data => {
+    log.log('room population changed');
+    log.log('number of users in room is now', data.count);
 });

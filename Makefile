@@ -1,4 +1,5 @@
-.PHONY : all help client server server-pm stop-server-pm list-server-pm stop-all-pm delete-all-pm logs-server-pm flush-logs-server-pm
+.PHONY : all help client server server-pm stop-server-pm list-server-pm stop-all-pm delete-all-pm \
+logs-server-pm flush-logs-server-pm test
 
 port ?= 3000
 
@@ -13,6 +14,10 @@ help:
 # target: client - Starts a socket client that aims at the server port of your choosing. Monitored by nodemon.
 client:
 	yarn client -- --server-port $(port)
+
+# target: test - Runs integration and unit tests.
+test:
+	yarn test
 
 # target: server - Starts a development server at the port of your choosing. Monitored by nodemon.
 server:

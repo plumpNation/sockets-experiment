@@ -2,5 +2,9 @@
     "redis": {
         "host": "localhost",
         "port": 6379
+    },
+
+    "log": {
+        "level": "warn"
     }
 }

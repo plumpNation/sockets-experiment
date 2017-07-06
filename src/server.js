@@ -1,8 +1,19 @@
 'use strict';
 
-const express = require('express');
-const redis   = require('socket.io-redis');
 const config  = require('config');
+const redis   = require('socket.io-redis');
+const http    = require('http');
+const express = require('express');
+
+const Log     = require('./log');
+
+const log = new Log(({
+    'level': config.get('log.level'),
+    'prefix': 'server'
+}));
+
+const redisPort = config.get('redis.port');
+const redisHost = config.get('redis.host');
 
 // socket.io namespace
 const namespace = '/';
@@ -10,15 +21,12 @@ const namespace = '/';
 class Server {
     constructor(port) {
         const app    = express();
-        const server = require('http').createServer(app);
+        const server = http.createServer(app);
         const io     = require('socket.io')(server);
-
-        const redisPort = config.get('redis.port');
-        const redisHost = config.get('redis.host');
 
         this.io = io;
 
-        console.log(`Connecting to redis server at ${redisHost}:${redisPort}`);
+        log.log(`connecting to redis server at ${redisHost}:${redisPort}`);
 
         // You must have a redis server up and running.
         // `6379` is the default port that redis runs on
@@ -29,16 +37,14 @@ class Server {
             'requestsTimeout': 2000
         }));
 
-        setupEvents(io);
-
-        console.log(`server: trying to bind server to *:${port}`);
+        setupEvents(io, port);
 
         server.listen(port, () => {
             if (typeof PhusionPassenger !== 'undefined') {
-                console.log(`server: running in passenger on localhost:${port}`);
+                log.log(`running in passenger on localhost:${port}`);
 
             } else {
-                console.log(`server: listening on localhost:${port}`);
+                log.log(`listening on localhost:${port}`);
             }
         });
     }
@@ -60,38 +66,33 @@ require('yargs')
 
 module.exports = Server;
 
-function setupEvents(io) {
+function setupEvents(io, port) {
     io.on('connection', socket => {
-        console.log(`server: client connected ${socket.id}`);
+        log.log(`client connected on port ${port}`);
 
         socket.on('disconnect', reason => {
-            console.log('server: a client disconnected');
+            log.log('a client disconnected');
 
-            if (reason) return console.info('server: disconnecting reason:', reason);
+            if (!reason) log.info('no reason given for disconnection'); return;
 
-            console.warn('server: no reason given');
+            log.log('disconnecting reason:', reason);
         });
 
         socket.on('disconnecting', reason => {
-            console.log('server: a client is disconnecting');
+            log.log('a client is disconnecting');
 
             // We want to tell all rooms the socket had joined that the user is leaving.
             getClientRooms(io, socket.id)
                 .then(rooms => {
                     rooms.forEach(room => {
-                        getRoomClients(io, room)
-                            .then(clients => {
-                                socket.broadcast
-                                    .to(room)
-                                    .emit('user left', {'count': clients.length});
-                            });
+                        emitRoomPopulationChange(io, socket, room);
                     });
                 })
-                .catch(err => console.error(err));
+                .catch(err => log.error(err));
 
-            if (reason) return console.info('server: disconnecting reason:', reason);
+            if (!reason) log.info('no reason given for disconnection'); return;
 
-            console.warn('server: no reason given');
+            log.log('disconnecting reason:', reason);
         });
 
         // We simply pass the data back
@@ -99,26 +100,47 @@ function setupEvents(io) {
             socket.emit('echo', data);
         });
 
-        socket.on('join', data => {
-            console.log(`Joining room ${data.roomId}`);
+        socket.on('join room', data => {
+            if (!data || !data.roomId) {
+                log.error('no roomId was supplied');
+
+                return;
+            }
 
             socket.join(data.roomId);
 
-            getRoomClients(io, data.roomId)
-                .then(clients => {
-                    socket.broadcast
-                        .to(data.roomId)
-                        .emit('user joined', {'count': clients.length});
-                })
-                .catch(err => console.error(err));
+            emitRoomPopulationChange(io, socket, data.roomId);
 
-            socket.emit('joined room');
+            socket.emit('joined room', {'roomId': data.roomId});
+            log.info(`client joined room ${data.roomId}`);
         });
     });
 }
 
+function emitRoomPopulationChange(io, socket, roomId) {
+    if (socket.id === roomId) {
+        log.log('roomId and socket.id match, not broadcasting to personal room');
+
+        return;
+    }
+
+    // tell the user how many other users are in the room
+    getRoomClients(io, roomId)
+        .then(clients => {
+            const count = clients.length;
+
+            log.log('found', count, 'clients in room', roomId);
+
+            socket.broadcast
+                .to(roomId)
+                .emit('room population changed', {'count': count});
+        })
+        .catch(err => log.error(err));
+}
+
 function getClientRooms(io, socketId) {
-    console.log('server: getting rooms for socketId %s', socketId);
+    log.log('getting rooms for socketId', socketId);
+
     return new Promise((resolve, reject) => {
         io.of('/').adapter.clientRooms(socketId, (err, rooms) => {
             if (err) return reject(err);
