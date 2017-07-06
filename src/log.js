@@ -15,7 +15,7 @@ module.exports = class Log {
             'error': 4
         };
 
-        let level = options.level;
+        const level = levels[options && options.level];
 
         if (!level) {
             throw new TypeError('`options.level` must be log, info, warn or error');
