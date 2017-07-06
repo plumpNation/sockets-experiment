@@ -43,18 +43,14 @@ module.exports = class Log {
     }
 
     log() {
-        console.log.apply(null, arguments);
+        console.log.apply(null, [this.prefix].concat([].slice.call(arguments)));
     }
 
     info() {
         const data = {
             icon      : '\u2139',
-
-            background: "\x1b[44m", // blue
-            foreground: "\x1b[36m", // blue
-            text      : "\x1b[37m", // white
-
-            reset     : "\x1b[0m"
+            background: '\x1b[44m',
+            foreground: '\x1b[36m'
         };
 
         this.out('info', data, arguments);
@@ -63,12 +59,8 @@ module.exports = class Log {
     warn() {
         const data = {
             icon      : '\u26A0',
-
-            background: "\x1b[43m", // yellow
-            foreground: "\x1b[33m", // yellow
-            text      : "\x1b[37m", // white
-
-            reset     : "\x1b[0m"
+            background: '\x1b[43m',
+            foreground: '\x1b[33m'
         };
 
         this.out('warn', data, arguments);
@@ -77,27 +69,26 @@ module.exports = class Log {
     error() {
         const data = {
             icon      : '✘',
-
-            background: "\x1b[41m", // red
-            foreground: "\x1b[31m", // red
-            text      : "\x1b[37m", // white
-
-            reset     : "\x1b[0m"
+            background: '\x1b[41m',
+            foreground: '\x1b[31m'
         };
 
         this.out('error', data, arguments);
     }
 
     out(method, data, args) {
+        const text  = '\x1b[37m';
+        const reset = '\x1b[0m';
+
         const params = [
-            data.background + data.text,
+            data.background + text,
             data.icon,
-            data.reset,
+            reset,
             data.foreground
         ]
         .concat(this.prefix)
         .concat([].slice.call(args))
-        .concat(data.reset);
+        .concat(reset);
 
         console[method].apply(null, params);
     }
