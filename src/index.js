@@ -39,6 +39,8 @@ class Server {
 
         setupEvents(io, port);
 
+        app.get('/health', (req, res) => res.sendStatus(200));
+
         server.listen(port, () => {
             if (typeof PhusionPassenger !== 'undefined') {
                 log.log(`running in passenger on localhost:${port}`);
