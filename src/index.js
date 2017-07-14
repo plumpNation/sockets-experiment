@@ -58,13 +58,20 @@ require('yargs')
     .command('serve [port]', 'start the server', (yargs) => {
         return yargs.option('port', {
             describe: 'Port that the socket server instance should bind on',
-            default: 3000
+            default: process.env.PORT || 3000
         })
     }, (argv) => {
         new Server(argv.port);
     })
     .help()
     .argv
+
+// Can create server if port supplied as PORT environment variable.
+// Remember we don't want to start a server on require(), as we want to keep this
+// Server() testable.
+if (process.env.PORT) {
+    new Server(process.env.PORT);
+}
 
 module.exports = Server;
 
