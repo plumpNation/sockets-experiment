@@ -7,3 +7,6 @@ config/production.json
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+
+# packages for deployment
+*.zip
