@@ -1,5 +1,0 @@
-{
-  "dependencies": {
-    "socket.io-redis": "^5.1.0"
-  }
-}
