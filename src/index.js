@@ -12,6 +12,9 @@ const log = new Log(({
     'prefix': 'server'
 }));
 
+// process.env.PORT is required to allow AWS to auto start the application on automated port numbers
+const defaultPort = process.env.PORT || config.get('app.port');
+
 const redisPort = config.get('redis.port');
 const redisHost = config.get('redis.host');
 
@@ -58,7 +61,7 @@ require('yargs')
     .command('serve [port]', 'start the server', (yargs) => {
         return yargs.option('port', {
             describe: 'Port that the socket server instance should bind on',
-            default: process.env.PORT || 3000
+            default: defaultPort
         })
     }, (argv) => {
         new Server(argv.port);

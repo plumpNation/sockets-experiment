@@ -27,7 +27,8 @@ const argv = require('yargs')
     .help()
     .argv;
 
-const serverPath = `http://localhost:${argv.serverPort}`;
+const serverHost = config.get('app.host') || 'http://localhost';
+const serverPath = `${serverHost}:${argv.serverPort}`;
 
 log.info(`trying to connect to ${serverPath}`);
 
