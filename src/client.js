@@ -16,9 +16,9 @@ const clientOptions = {
     'transports': ['websocket'],
 
     'reconnection'         : true,
-    'reconnectionDelay'    : 1000,
-    'reconnectionDelayMax' : 5000,
-    'reconnectionAttempts' : 5
+    'reconnectionDelay'    : 5000,
+    'reconnectionDelayMax' : 10000,
+    'reconnectionAttempts' : 50
 };
 
 const argv = require('yargs')
