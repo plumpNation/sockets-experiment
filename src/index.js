@@ -13,10 +13,10 @@ const log = new Log(({
 }));
 
 // process.env.PORT is required to allow AWS to auto start the application on automated port numbers
-const defaultPort = process.env.PORT || config.get('app.port');
+const serverPort = process.env.PORT || config.get('server.port') || 3000;
 
-const redisPort = config.get('redis.port');
-const redisHost = config.get('redis.host');
+const redisPort = config.get('redis.port') || 6379;
+const redisHost = config.get('redis.host') || 'localhost';
 
 // socket.io namespace
 const namespace = '/';
@@ -35,8 +35,8 @@ class Server {
         // `6379` is the default port that redis runs on
         io.adapter(redis({
             'key': 'foobar',
-            'host': redisHost || 'localhost',
-            'port': redisPort || 6379,
+            'host': redisHost,
+            'port': redisPort,
             'requestsTimeout': 2000
         }));
 
@@ -61,9 +61,10 @@ require('yargs')
     .command('serve [port]', 'start the server', (yargs) => {
         return yargs.option('port', {
             describe: 'Port that the socket server instance should bind on',
-            default: defaultPort
+            default: serverPort
         })
     }, (argv) => {
+        log.info('Setting up from argv.port: ' + argv.port);
         new Server(argv.port);
     })
     .help()

@@ -27,8 +27,11 @@ const argv = require('yargs')
     .help()
     .argv;
 
-const serverHost = config.get('app.host') || 'http://localhost';
-const serverPath = `${serverHost}:${argv.serverPort}`;
+const serverProtocol = config.get('server.protocol') || 'http';
+const serverHost     = config.get('server.host') || 'localhost';
+const serverPort     = argv.serverPort || config.get('server.port');
+
+const serverPath     = `${serverProtocol}://${serverHost}:${serverPort}`;
 
 log.info(`trying to connect to ${serverPath}`);
 
